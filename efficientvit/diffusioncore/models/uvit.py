@@ -184,6 +184,7 @@ class UViTConfig:
     name: str = "UViT"
 
     input_size: int = 32
+    input_1d: bool = True 
     patch_size: int = 2
     in_channels: int = 4
     hidden_size: int = 1152
@@ -273,8 +274,12 @@ class UViT(nn.Module):
         if is_master():
             print(f"attention mode is {ATTENTION_MODE}")
 
-        self.patch_embed = PatchEmbed(patch_size=cfg.patch_size, in_chans=cfg.in_channels, embed_dim=cfg.hidden_size)
-        num_patches = (cfg.input_size // cfg.patch_size) ** 2
+        if self.cfg.input_1d:
+            self.patch_embed = nn.Linear(cfg.in_channels, cfg.hidden_size)
+            num_patches = cfg.input_size
+        else:
+            self.patch_embed = PatchEmbed(patch_size=cfg.patch_size, in_chans=cfg.in_channels, embed_dim=cfg.hidden_size)
+            num_patches = (cfg.input_size // cfg.patch_size) ** 2
 
         self.time_embed = (
             nn.Sequential(
@@ -454,7 +459,8 @@ class UViT(nn.Module):
         x = self.decoder_pred(x)
         assert x.size(1) == self.extras + L
         x = x[:, self.extras :, :]
-        x = unpatchify(x, self.cfg.in_channels)
+        if not self.cfg.input_1d:
+            x = unpatchify(x, self.cfg.in_channels)
         x = self.final_layer(x)
         return x
 
@@ -466,7 +472,10 @@ class UViT(nn.Module):
         half = x[: len(x) // 2]
         combined = torch.cat([half, half], dim=0)
         model_out = self.forward_without_cfg(combined, t, y)
-        eps, rest = model_out[:, : self.cfg.in_channels], model_out[:, self.cfg.in_channels :]
+        if not self.cfg.input_1d:
+            eps, rest = model_out[:, : self.cfg.in_channels], model_out[:, self.cfg.in_channels :]
+        else:
+            eps, rest = model_out[:, :, : self.cfg.in_channels], model_out[:, :, self.cfg.in_channels :]
         cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
         half_eps = uncond_eps + cfg_scale * (cond_eps - uncond_eps)
         eps = torch.cat([half_eps, half_eps], dim=0)
@@ -490,11 +499,18 @@ class UViT(nn.Module):
     @torch.no_grad()
     def generate(self, inputs, null_inputs, scale: float = 1.5, generator: Optional[torch.Generator] = None):
         device = get_device(self)
-        samples = torch.randn(
-            (inputs.shape[0], self.cfg.in_channels, self.cfg.input_size, self.cfg.input_size),
-            generator=generator,
-            device=device,
-        )
+        if self.cfg.input_1d:
+            samples = torch.randn(
+                (inputs.shape[0], self.cfg.input_size, self.cfg.in_channels),
+                generator=generator,
+                device=device,
+            )
+        else:
+            samples = torch.randn(
+                (inputs.shape[0], self.cfg.in_channels, self.cfg.input_size, self.cfg.input_size),
+                generator=generator,
+                device=device,
+            )
 
         if self.cfg.eval_scheduler == "DPM_Solver":
             N = self.eval_scheduler.total_N
@@ -572,6 +588,18 @@ def dc_ae_usit_2b_in_512px(
     return (
         f"autoencoder={ae_name} scaling_factor={scaling_factor} "
         f"model=uvit uvit.depth=28 uvit.hidden_size=2048 uvit.num_heads=32 uvit.in_channels={in_channels} uvit.patch_size=1 "
+        "uvit.train_scheduler=SiTSampler uvit.eval_scheduler=ODE_dopri5 uvit.num_inference_steps=250 "
+        f"uvit.pretrained_path={'null' if pretrained_path is None else pretrained_path} "
+        "fid.ref_path=assets/data/fid/imagenet_512_train.npz"
+    )
+
+
+def maetok_usit_2b_in_512px(
+    ae_name: str, scaling_factor: float, in_channels: int, pretrained_path: Optional[str]
+) -> str:
+    return (
+        f"autoencoder={ae_name} scaling_factor={scaling_factor} "
+        f"model=uvit uvit.depth=28 uvit.hidden_size=2048 uvit.num_heads=32 uvit.in_channels={in_channels} uvit.patch_size=1 uvit.input_1d=True"
         "uvit.train_scheduler=SiTSampler uvit.eval_scheduler=ODE_dopri5 uvit.num_inference_steps=250 "
         f"uvit.pretrained_path={'null' if pretrained_path is None else pretrained_path} "
         "fid.ref_path=assets/data/fid/imagenet_512_train.npz"

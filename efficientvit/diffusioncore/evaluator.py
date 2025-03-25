@@ -26,6 +26,9 @@ from efficientvit.diffusioncore.models.dit import DiT, DiTConfig
 from efficientvit.diffusioncore.models.uvit import UViT, UViTConfig
 from efficientvit.models.utils.network import get_dtype_from_str, is_parallel
 
+
+from efficientvit.continuous_tokenizer.modelling.tokenizer import AEModel
+
 __all__ = ["EvaluatorConfig", "Evaluator"]
 
 
@@ -86,6 +89,9 @@ class Evaluator:
                     DCAE_HF.from_pretrained(f"mit-han-lab/{cfg.autoencoder}").eval().to(device=device, dtype=dtype)
                 )
                 assert cfg.scaling_factor is not None
+            elif cfg.autoencoder in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
+                self.autoencoder = AEModel.from_pretrained(cfg.autoencoder).eval().to(device=device, dtype=dtype)
+                cfg.scaling_factor = self.autoencoder.vq_std
             elif cfg.autoencoder in ["stabilityai/sd-vae-ft-ema", "flux-vae"]:
                 self.autoencoder = AutoencoderKL(cfg.autoencoder).eval().to(device=device, dtype=dtype)
                 cfg.scaling_factor = self.autoencoder.model.config.scaling_factor
@@ -97,7 +103,11 @@ class Evaluator:
             cfg.dit.input_size = cfg.resolution // self.autoencoder.spatial_compression_ratio
             model = DiT(cfg.dit)
         elif cfg.model == "uvit":
-            cfg.uvit.input_size = cfg.resolution // self.autoencoder.spatial_compression_ratio
+            if cfg.autoencoder in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
+                cfg.uvit.input_size = 128 # cfg.resolution // self.autoencoder.spatial_compression_ratio
+                cfg.uvit.input_1d = True 
+            else:
+                cfg.uvit.input_size = cfg.resolution // self.autoencoder.spatial_compression_ratio
             model = UViT(cfg.uvit)
         else:
             raise NotImplementedError
@@ -185,10 +195,19 @@ class Evaluator:
                 if self.cfg.model in ["dit", "uvit"]:
                     with torch.autocast(device_type="cuda", dtype=self.amp_dtype, enabled=True):
                         latent_samples = network.generate(inputs, inputs_null, self.cfg.cfg_scale, eval_generator)
-                    latent_samples = (
-                        latent_samples.to(dtype=get_dtype_from_str(self.cfg.autoencoder_dtype))
-                        / self.cfg.scaling_factor
-                    )
+                    
+                    if self.cfg.autoencoder in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
+                        latent_samples = (
+                            latent_samples.to(dtype=get_dtype_from_str(self.cfg.autoencoder_dtype))
+                            * self.cfg.scaling_factor
+                        )
+                    else: 
+                        latent_samples = (
+                            latent_samples.to(dtype=get_dtype_from_str(self.cfg.autoencoder_dtype))
+                            / self.cfg.scaling_factor
+                        )
+                    
+                    
                     image_samples = self.autoencoder.decode(latent_samples)
                     assert torch.isnan(image_samples).sum() == 0, "NaN detected!"
                     image_samples_uint8 = torch.clamp(127.5 * image_samples + 128.0, 0, 255).to(dtype=torch.uint8)

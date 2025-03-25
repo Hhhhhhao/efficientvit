@@ -30,6 +30,8 @@ from efficientvit.apps.utils.metric import AverageMeter
 from efficientvit.models.efficientvit.dc_ae import DCAE
 from efficientvit.models.utils.network import get_dtype_from_str, is_parallel
 
+from efficientvit.continuous_tokenizer.modelling.tokenizer import AEModel
+
 __all__ = ["EvaluatorConfig", "Evaluator"]
 
 
@@ -86,7 +88,10 @@ class Evaluator:
             raise ValueError(f"dataset {cfg.dataset} is not supported")
 
         # model
-        model = DCAE_HF.from_pretrained(f"mit-han-lab/{cfg.model}")
+        if cfg.model in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
+            model = AEModel.from_pretrained(cfg.autoencoder).eval().to(device=device, dtype=dtype)
+        else:
+            model = DCAE_HF.from_pretrained(f"mit-han-lab/{cfg.model}")
 
         # if cfg.channels_last:
         #     model = model.to(memory_format=torch.channels_last)
