@@ -89,7 +89,7 @@ class Evaluator:
 
         # model
         if cfg.model in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
-            model = AEModel.from_pretrained(cfg.autoencoder)
+            model = AEModel.from_pretrained(cfg.model)
         else:
             model = DCAE_HF.from_pretrained(f"mit-han-lab/{cfg.model}")
 
