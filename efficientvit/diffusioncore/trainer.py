@@ -30,7 +30,7 @@ def manage_checkpoints(save_dir, keep_last_n=10):
     # List all checkpoint files in the save directory
     checkpoints = [f for f in os.listdir(save_dir) if f.endswith('.pt')]
     checkpoints = [f for f in checkpoints if 'best_ckpt' not in f]
-    checkpoints.sort(key=lambda f: int(f.split('/')[-1].split('.')[0]))  # Sort by epoch number
+    checkpoints.sort(key=lambda f: int(f.split('/')[-1].split('.')[0].split('_')[-1]))  # Sort by epoch number
 
     # If more than `keep_last_n` checkpoints exist, remove the oldest ones
     if len(checkpoints) > keep_last_n + 1:  # keep_last_n + 1 to account for the latest checkpoint
@@ -403,7 +403,7 @@ class Trainer(Evaluator):
                     self.print_and_f_log(f"valid info dict: {valid_info_dict}\n", flush=True)
                     if self.cfg.compute_fid:
                         self.best_fid = min(valid_info_dict["fid"], self.best_fid)
-                    self.save_model(model_name=f"step_{self.global_step}.pt", epoch=epoch)
+                    self.save_model(model_name=f"step_{self.global_step:07d}.pt", epoch=epoch)
                     log_dict.update(valid_info_dict)
                     self.model.train()
 
