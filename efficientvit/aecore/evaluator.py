@@ -198,7 +198,10 @@ class Evaluator:
                             break
                     del input_images, output_images
                 # update metrics
-                valid_loss.update(output_dict["loss"].item(), images.shape[0])
+                if self.cfg.model in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
+                    valid_loss.update(output_dict["loss"][0].item(), images.shape[0])
+                else:
+                    valid_loss.update(output_dict["loss"].item(), images.shape[0])
                 if compute_fid:
                     device = output_dict["output"].device
                     output_images = output_dict["output"] * 0.5 + 0.5
