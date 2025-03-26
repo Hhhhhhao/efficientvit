@@ -9,6 +9,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(os.path.dirname(BASE_DIR))
 sys.path.append(ROOT_DIR)
 
+from efficientvit.aecore.data_provider.imagenet import ImageNetDataProvider, ImageNetDataProviderConfig
 from efficientvit.aecore.evaluator import Evaluator, EvaluatorConfig
 from efficientvit.apps.utils.dist import is_master
 

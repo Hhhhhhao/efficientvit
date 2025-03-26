@@ -50,7 +50,7 @@ class EvaluatorConfig:
     save_all_images: bool = False
 
     resolution: int = 256
-    amp: str = "fp32"  # "bf16"
+    amp: str = "bf16"
 
     # dataset
     dataset: str = MISSING
@@ -89,7 +89,7 @@ class Evaluator:
 
         # model
         if cfg.model in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
-            model = AEModel.from_pretrained(cfg.autoencoder).eval().to(device=device, dtype=dtype)
+            model = AEModel.from_pretrained(cfg.autoencoder)
         else:
             model = DCAE_HF.from_pretrained(f"mit-han-lab/{cfg.model}")
 

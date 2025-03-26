@@ -68,7 +68,7 @@ def main():
 
     device = torch.device("cuda")
     dtype = get_dtype_from_str(cfg.dtype)
-    model = AEModel.from_pretrained(cfg.autoencoder).eval().to(device=device, dtype=dtype)
+    model = AEModel.from_pretrained(f"MAETok/{cfg.model_name}").eval().to(device=device, dtype=dtype)
     cfg.scaling_factor = model.vq_std
     # if cfg.model_name in REGISTERED_DCAE_MODEL:
     #     model = DCAE_HF.from_pretrained(f"mit-han-lab/{cfg.model_name}").to(device=device, dtype=dtype)
