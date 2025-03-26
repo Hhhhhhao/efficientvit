@@ -55,6 +55,7 @@ class EvaluatorConfig:
     autoencoder: Optional[str] = None
     autoencoder_dtype: str = "fp32"
     scaling_factor: Optional[float] = None
+    bias_factor: Optional[float] = None
 
     # model
     model: str = "uvit"
@@ -92,6 +93,7 @@ class Evaluator:
             elif cfg.autoencoder in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
                 self.autoencoder = AEModel.from_pretrained(cfg.autoencoder).eval().to(device=device, dtype=dtype)
                 cfg.scaling_factor = self.autoencoder.vq_std
+                cfg.bias_factor = self.autoencoder.vq_mean
             elif cfg.autoencoder in ["stabilityai/sd-vae-ft-ema", "flux-vae"]:
                 self.autoencoder = AutoencoderKL(cfg.autoencoder).eval().to(device=device, dtype=dtype)
                 cfg.scaling_factor = self.autoencoder.model.config.scaling_factor
@@ -199,7 +201,7 @@ class Evaluator:
                     if self.cfg.autoencoder in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
                         latent_samples = (
                             latent_samples.to(dtype=get_dtype_from_str(self.cfg.autoencoder_dtype))
-                            * self.cfg.scaling_factor
+                            * self.cfg.scaling_factor + self.cfg.bias_factor
                         )
                     else: 
                         latent_samples = (
