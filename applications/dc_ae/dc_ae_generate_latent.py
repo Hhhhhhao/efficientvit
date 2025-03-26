@@ -128,7 +128,10 @@ def main():
             continue
 
         images = input_dict["image"].cuda()
-        latents = model.encode(images)
+        if cfg.model_name in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
+            latents, _, _ = model.encode(images)
+        else:
+            latents = model.encode(images)
         latents = latents * cfg.scaling_factor
         for i, (image_path, _) in enumerate(zip(input_dict["image_path"], input_dict["label"])):
             latent = latents[i].cpu().numpy()
