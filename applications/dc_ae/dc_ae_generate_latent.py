@@ -74,7 +74,7 @@ def main():
         model = AutoencoderKL(cfg.model_name).to(device=device, dtype=dtype)
         cfg.scaling_factor = model.model.config.scaling_factor
     elif cfg.model_name in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
-        model = AEModel.from_pretrained(cfg.model_name)
+        model = AEModel.from_pretrained(cfg.model_name).eval().to(device=device, dtype=dtype)
         cfg.scaling_factor = model.vq_std
     else:
         raise ValueError(f"{cfg.model} is not supported for generating latent")
