@@ -69,7 +69,7 @@ class TrainerConfig(EvaluatorConfig):
     max_steps: Optional[int] = None
     clip_grad: Optional[float] = None
     num_store_images: int = 64
-    save_checkpoint_steps: int = 1000
+    save_checkpoint_steps: int = 5000
     evaluate_steps: int = 20000
 
     optimizer: OptimizerConfig = field(default_factory=OptimizerConfig)
@@ -411,7 +411,7 @@ class Trainer(Evaluator):
 
                 # save checkpoint
                 if self.global_step % self.cfg.save_checkpoint_steps == 0:
-                    self.save_model("checkpoint.pt", epoch)
+                    self.save_model(model_name=f"step_{self.global_step:07d}.pt", epoch=epoch)
                     self.log()
 
                 if self.cfg.max_steps is not None and self.global_step >= self.cfg.max_steps:
