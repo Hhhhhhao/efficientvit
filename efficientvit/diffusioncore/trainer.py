@@ -26,6 +26,20 @@ from efficientvit.diffusioncore.evaluator import Evaluator, EvaluatorConfig
 
 __all__ = ["OptimizerConfig", "LRSchedulerConfig", "TrainerConfig", "Trainer"]
 
+def manage_checkpoints(save_dir, keep_last_n=10):
+    # List all checkpoint files in the save directory
+    checkpoints = [f for f in os.listdir(save_dir) if f.endswith('.pt')]
+    checkpoints = [f for f in checkpoints if 'best_ckpt' not in f]
+    checkpoints.sort(key=lambda f: int(f.split('/')[-1].split('.')[0]))  # Sort by epoch number
+
+    # If more than `keep_last_n` checkpoints exist, remove the oldest ones
+    if len(checkpoints) > keep_last_n + 1:  # keep_last_n + 1 to account for the latest checkpoint
+        for checkpoint_file in checkpoints[:-keep_last_n-1]:
+            checkpoint_path = os.path.join(save_dir, checkpoint_file)
+            if os.path.exists(checkpoint_path):
+                os.remove(checkpoint_path)
+                print(f"Removed old checkpoint: {checkpoint_path}")
+                
 
 @dataclass
 class OptimizerConfig:
@@ -234,6 +248,7 @@ class Trainer(Evaluator):
             shutil.copy(model_path_, model_path)
         else:
             torch.save(checkpoint, model_path)
+        manage_checkpoints(self.checkpoint_dir, 3)
         self.print_and_f_log(f"save model to {model_path} at step {self.global_step}\n", flush=True)
 
     def resume_from_checkpoint(self, checkpoint_path: str):
