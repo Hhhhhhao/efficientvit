@@ -25,7 +25,7 @@ from efficientvit.apps.utils.dist import (
 )
 from efficientvit.apps.utils.image import CustomImageFolder, DMCrop
 from efficientvit.models.utils.network import get_dtype_from_str
-
+from efficientvit.continuous_tokenizer.modelling.tokenizer import AEModel
 
 @dataclass
 class GenerateLatentConfig:
@@ -73,6 +73,9 @@ def main():
     elif cfg.model_name in ["stabilityai/sd-vae-ft-ema", "flux-vae"]:
         model = AutoencoderKL(cfg.model_name).to(device=device, dtype=dtype)
         cfg.scaling_factor = model.model.config.scaling_factor
+    elif cfg.model_name in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
+        model = AEModel.from_pretrained(cfg.model_name)
+        cfg.scaling_factor = model.vq_std
     else:
         raise ValueError(f"{cfg.model} is not supported for generating latent")
 
