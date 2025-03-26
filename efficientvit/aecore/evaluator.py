@@ -133,7 +133,10 @@ class Evaluator:
 
     def run_step(self, images, global_step: int = 0):
         with torch.autocast(device_type="cuda", dtype=self.amp_dtype, enabled=True):
-            output, loss, info = self.model(images, global_step)
+            if self.cfg.model in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
+                output, loss, info = self.model(images)
+            else:
+                output, loss, info = self.model(images, global_step)
         return {"output": output, "loss": loss, "info": info}
 
     @torch.no_grad
