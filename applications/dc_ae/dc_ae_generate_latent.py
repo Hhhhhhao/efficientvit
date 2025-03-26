@@ -76,6 +76,7 @@ def main():
     elif cfg.model_name in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
         model = AEModel.from_pretrained(cfg.model_name).eval().to(device=device, dtype=dtype)
         cfg.scaling_factor = model.vq_std
+        cfg.bias_factor = model.vq_mean
     else:
         raise ValueError(f"{cfg.model} is not supported for generating latent")
 
@@ -130,9 +131,10 @@ def main():
         images = input_dict["image"].cuda()
         if cfg.model_name in ['MAETok/maetok-b-128-512', 'MAETok/maetok-b-128']:
             latents, _, _ = model.encode(images)
+            latents = (latents - cfg.bias_factor) / cfg.scaling_factor
         else:
             latents = model.encode(images)
-        latents = latents * cfg.scaling_factor
+            latents = latents * cfg.scaling_factor
         for i, (image_path, _) in enumerate(zip(input_dict["image_path"], input_dict["label"])):
             latent = latents[i].cpu().numpy()
             latent_path = image_path_to_latent_path(image_path, cfg.image_root_path, cfg.latent_root_path)
