@@ -391,7 +391,7 @@ class Trainer(Evaluator):
                     break
 
                 # evaluate
-                if self.global_step % self.cfg.evaluate_steps == 0:
+                if self.global_step % self.cfg.evaluate_steps == 0 or self.global_step == 1:
                     if self.cfg.evaluate_ema:
                         if self.cfg.model in ["dit", "uvit"]:
                             network = self.ema.shadows[self.cfg.model]
