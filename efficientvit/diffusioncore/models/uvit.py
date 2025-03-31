@@ -602,5 +602,5 @@ def maetok_usit_2b_in_512px(
         f"model=uvit uvit.depth=28 uvit.hidden_size=2048 uvit.num_heads=32 uvit.in_channels={in_channels} uvit.patch_size=1 uvit.input_1d=True "
         "uvit.train_scheduler=SiTSampler uvit.eval_scheduler=ODE_dopri5 uvit.num_inference_steps=250 "
         f"uvit.pretrained_path={'null' if pretrained_path is None else pretrained_path} "
-        "fid.ref_path=assets/data/fid/imagenet_512_train.npz"
+        "fid.ref_path=assets/data/fid/imagenet_512_val.npz"
     )
