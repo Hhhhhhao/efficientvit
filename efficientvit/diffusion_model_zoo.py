@@ -117,7 +117,7 @@ REGISTERED_MAETok_DIFFUSION_MODEL: dict[str, tuple[Callable, str, float, float, 
         1.0640852,
         1.1726909,
         32,
-        None,
+        '/home/haoc3/efficientvit/exp/diffusion/maetok_b_128-512_mean_std/usit_1.5b_512/bs1024_lr1e-4_bf16_500k/step_0465000.pt',
     ),
 }
 
@@ -134,6 +134,7 @@ def create_maetok_diffusion_model_cfg(name: str, pretrained_path: Optional[str] 
     pretrained_path = default_pt if pretrained_path is None else pretrained_path
     cfg_str = diffusion_cls(ae_name, bias_factor, scaling_factor, in_channels, pretrained_path)
     cfg = OmegaConf.from_dotlist(cfg_str.split(" ") + ["run_dir=tmp"])
+    print(cfg)
     cfg: EvaluatorConfig = OmegaConf.to_object(OmegaConf.merge(OmegaConf.structured(EvaluatorConfig), cfg))
     return cfg
 
