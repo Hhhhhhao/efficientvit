@@ -73,7 +73,7 @@ REGISTERED_DCAE_DIFFUSION_MODEL: dict[str, tuple[Callable, str, float, int, Opti
     "maetok-b-128-usit-2b-in-512px": (
         maetok_usit_2b_in_512px,
         "MAETok/maetok-b-128-512",
-        1.0640852,
+        # 1.0640852,
         1.1726909,
         32,
         None,
@@ -110,6 +110,17 @@ REGISTERED_DCAE_DIFFUSION_MODEL: dict[str, tuple[Callable, str, float, int, Opti
 }
 
 
+REGISTERED_MAETok_DIFFUSION_MODEL: dict[str, tuple[Callable, str, float, float, int, Optional[str]]] = {
+    "maetok-b-128-usit-2b-in-512px": (
+        maetok_usit_2b_in_512px,
+        "MAETok/maetok-b-128-512",
+        1.0640852,
+        1.1726909,
+        32,
+        None,
+    ),
+}
+
 def create_dc_ae_diffusion_model_cfg(name: str, pretrained_path: Optional[str] = None) -> EvaluatorConfig:
     diffusion_cls, ae_name, scaling_factor, in_channels, default_pt = REGISTERED_DCAE_DIFFUSION_MODEL[name]
     pretrained_path = default_pt if pretrained_path is None else pretrained_path
@@ -119,7 +130,7 @@ def create_dc_ae_diffusion_model_cfg(name: str, pretrained_path: Optional[str] =
     return cfg
 
 def create_maetok_diffusion_model_cfg(name: str, pretrained_path: Optional[str] = None) -> EvaluatorConfig:
-    diffusion_cls, ae_name, bias_factor, scaling_factor, in_channels, default_pt = REGISTERED_DCAE_DIFFUSION_MODEL[name]
+    diffusion_cls, ae_name, bias_factor, scaling_factor, in_channels, default_pt = REGISTERED_MAETok_DIFFUSION_MODEL[name]
     pretrained_path = default_pt if pretrained_path is None else pretrained_path
     cfg_str = diffusion_cls(ae_name, bias_factor, scaling_factor, in_channels, pretrained_path)
     cfg = OmegaConf.from_dotlist(cfg_str.split(" ") + ["run_dir=tmp"])
