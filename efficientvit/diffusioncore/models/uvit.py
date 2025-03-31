@@ -598,7 +598,7 @@ def maetok_usit_2b_in_512px(
     ae_name: str, bias_factor: float, scaling_factor: float, in_channels: int, pretrained_path: Optional[str]
 ) -> str:
     return (
-        f"autoencoder={ae_name} bias_factor={bias_factor}, scaling_factor={scaling_factor} "
+        f"autoencoder={ae_name} bias_factor={bias_factor} scaling_factor={scaling_factor} "
         f"model=uvit uvit.depth=28 uvit.hidden_size=2048 uvit.num_heads=32 uvit.in_channels={in_channels} uvit.patch_size=1 uvit.input_1d=True"
         "uvit.train_scheduler=SiTSampler uvit.eval_scheduler=ODE_dopri5 uvit.num_inference_steps=250 "
         f"uvit.pretrained_path={'null' if pretrained_path is None else pretrained_path} "
