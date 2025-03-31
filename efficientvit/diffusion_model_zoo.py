@@ -73,7 +73,7 @@ REGISTERED_DCAE_DIFFUSION_MODEL: dict[str, tuple[Callable, str, float, int, Opti
     "maetok-b-128-usit-2b-in-512px": (
         maetok_usit_2b_in_512px,
         "MAETok/maetok-b-128-512",
-        1.0640852
+        1.0640852,
         1.1726909,
         32,
         None,
